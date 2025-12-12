@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Color Image Generator</title>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md space-y-4">
+    <h1 class="text-2xl font-bold text-center">Color Image Generator</h1>
+
+    <div class="space-y-2">
+      <label class="block font-medium">Width (px)</label>
+      <input id="widthInput" type="number" class="w-full border rounded p-2" placeholder="300" />
+    </div>
+
+    <div class="space-y-2">
+      <label class="block font-medium">Height (px)</label>
+      <input id="heightInput" type="number" class="w-full border rounded p-2" placeholder="300" />
+    </div>
+
+    <div class="space-y-2">
+      <label class="block font-medium">Background Color</label>
+      <input id="colorPicker" type="color" class="w-full h-12 border rounded" />
+    </div>
+
+    <div class="space-y-2">
+      <label class="block font-medium">Text (optional)</label>
+      <input id="textInput" type="text" class="w-full border rounded p-2" placeholder="Your text" />
+    </div>
+
+    <div class="space-y-2">
+      <label class="block font-medium">Text Color</label>
+      <select id="textColor" class="w-full border rounded p-2">
+        <option value="#ffffff">White</option>
+        <option value="#000000">Black</option>
+      </select>
+    </div>
+
+    <button id="exportBtn" class="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700">Export Image</button>
+  </div>
+
+  <script>
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
+    const colorPicker = document.getElementById('colorPicker');
+    const textInput = document.getElementById('textInput');
+    const textColor = document.getElementById('textColor');
+    const exportBtn = document.getElementById('exportBtn');
+
+    function randomString(length = 6) {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    exportBtn.addEventListener('click', () => {
+      const w = parseInt(widthInput.value);
+      const h = parseInt(heightInput.value);
+      const bgColor = colorPicker.value;
+      const text = textInput.value;
+      const txtColor = textColor.value;
+
+      if (!w || !h) return alert('Please enter valid width and height');
+
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+
+      // Fill background
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, w, h);
+
+      // Add text if present
+      if (text) {
+        let maxWidth = w - 10; // 5px padding on each side
+        let fontSize = 500;
+        ctx.font = `bold ${fontSize}px Helvetica, Arial, sans-serif`;
+        while (ctx.measureText(text).width > maxWidth && fontSize > 5) {
+          fontSize--;
+          ctx.font = `bold ${fontSize}px Helvetica, Arial, sans-serif`;
+        }
+
+        ctx.fillStyle = txtColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, w / 2, h / 2);
+      }
+
+      const uniqueFilename = `generated-image-${randomString()}.png`;
+      const link = document.createElement('a');
+      link.download = uniqueFilename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  </script>
+</body>
+</html>
