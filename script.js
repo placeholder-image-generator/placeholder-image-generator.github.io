@@ -7,16 +7,81 @@ const textAlignInput = document.getElementById('textAlign');
 const fontStyleInput = document.getElementById('fontStyle');
 
 const overlayInput = document.getElementById('overlayInput');
+const overlayDropzone = document.getElementById('overlayDropzone');
+
 const blendModeInput = document.getElementById('blendMode');
 const overlayOpacityInput = document.getElementById('overlayOpacity');
 const overlaySizeInput = document.getElementById('overlaySize');
-const affectsTextInput = document.getElementById('affectsText');
+
 
 const exportBtn = document.getElementById('exportBtn');
 const canvas = document.getElementById('previewCanvas');
 const ctx = canvas.getContext('2d');
 
+const overlay2Input = document.getElementById('overlay2Input');
+const overlaySize2Input = document.getElementById('overlaySize2');
+const overlay2Dropzone = document.getElementById('overlay2Dropzone');
+const blendMode2Input = document.getElementById('blendMode2');
+const overlayOpacity2Input = document.getElementById('overlayOpacity2');
+
+
 let overlayImage = null;
+let overlayImage2 = null;
+
+overlayDropzone.addEventListener('click', () => {
+  overlayInput.click();
+});
+
+overlayDropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+
+overlayDropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+
+  loadImage(file, (img) => {
+    overlayImage = img;
+    render();
+  });
+});
+
+overlayInput.addEventListener('change', () => {
+  const file = overlayInput.files[0];
+
+  loadImage(file, (img) => {
+    overlayImage = img;
+    render();
+  });
+});
+
+overlay2Dropzone.addEventListener('click', () => {
+  overlay2Input.click();
+});
+
+overlay2Dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+
+overlay2Dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+
+  loadImage(file, (img) => {
+    overlayImage2 = img;
+    render();
+  });
+});
+
+overlay2Input.addEventListener('change', () => {
+  const file = overlay2Input.files[0];
+
+  loadImage(file, (img) => {
+    overlayImage2 = img;
+    render();
+  });
+});
+
 
 /* ---------- helpers ---------- */
 function randomString(len = 6) {
@@ -28,15 +93,15 @@ function drawText(w, h) {
   if (!text) return;
 
   const lines = text.split('\n');
-  const padding = 50;
+  const padding = 14;
   const maxWidth = w - padding * 2;
 
-  let fontSize = 500;
-  ctx.font = `${fontStyleInput.value} ${fontSize}px Helvetica, Arial`;
+  let fontSize = 23;
+  ctx.font = `${fontStyleInput.value} ${fontSize}px "Draconian", monospace`;
 
   while (lines.some(l => ctx.measureText(l).width > maxWidth) && fontSize > 5) {
     fontSize--;
-    ctx.font = `${fontStyleInput.value} ${fontSize}px Helvetica, Arial`;
+    ctx.font = `${fontStyleInput.value} ${fontSize}px "Draconian"`;
   }
 
   ctx.fillStyle = textColor.value;
@@ -45,54 +110,85 @@ function drawText(w, h) {
 
   const lineHeight = fontSize * 0.65;
   const totalHeight = lineHeight * lines.length;
-  const startY = (h - totalHeight) / 2 + lineHeight / 2;
+  let startY;
 
-  let x =
-    textAlignInput.value === 'left' ? padding :
-    textAlignInput.value === 'right' ? w - padding :
-    w / 2;
+  const align = textAlignInput.value;
+
+let x;
+let y;
+
+// ---------- horizontal ----------
+if (align.includes('left')) {
+  ctx.textAlign = 'left';
+  x = padding;
+} else if (align.includes('right')) {
+  ctx.textAlign = 'right';
+  x = w - padding;
+} else {
+  ctx.textAlign = 'center';
+  x = w / 2;
+}
+
+// ---------- vertical anchor ----------
+if (align.includes('top')) {
+  ctx.textBaseline = 'top';
+  y = padding;
+} else if (align.includes('bottom')) {
+  ctx.textBaseline = 'bottom';
+  y = h - padding;
+} else {
+  ctx.textBaseline = 'middle';
+  y = h / 2;
+}
+
+// ---------- multiline offset ----------
+
+if (align.includes('top')) {
+  startY = y;
+} else if (align.includes('bottom')) {
+  startY = y - (lines.length - 1) * lineHeight;
+} else {
+  startY = y - ((lines.length - 1) * lineHeight) / 2;
+}
 
   lines.forEach((line, i) => {
     ctx.fillText(line, x, startY + i * lineHeight);
   });
 }
 
-function drawOverlay(w, h) {
-  if (!overlayImage) return;
+function drawOverlayImage(img, w, h, blendMode, opacity, sizeMode) {
+  if (!img) return;
 
   let dw, dh, dx, dy;
 
-  const iw = overlayImage.width;
-  const ih = overlayImage.height;
-  const mode = overlaySizeInput.value;
+  const iw = img.width;
+  const ih = img.height;
+  const mode = sizeMode;
 
   if (mode === 'contain') {
     const scale = Math.min(w / iw, h / ih, 1);
     dw = iw * scale;
     dh = ih * scale;
-  } else { // cover
+  } else {
     const scale = Math.max(w / iw, h / ih, 1);
     dw = iw * scale;
     dh = ih * scale;
-    // prevent upscaling beyond original
-    if (dw > iw) dw = iw;
-    if (dh > ih) dh = ih;
   }
 
   dx = (w - dw) / 2;
   dy = (h - dh) / 2;
 
   ctx.save();
-  ctx.globalAlpha = overlayOpacityInput.value / 100;
-  ctx.globalCompositeOperation = blendModeInput.value;
-  ctx.drawImage(overlayImage, dx, dy, dw, dh);
+  ctx.globalAlpha = opacity;
+  ctx.globalCompositeOperation = blendMode;
+  ctx.drawImage(img, dx, dy, dw, dh);
   ctx.restore();
 }
 
 /* ---------- render ---------- */
 function render() {
-  const w = parseInt(widthInput.value) || 300;
-  const h = parseInt(heightInput.value) || 300;
+  const w = parseInt(widthInput.value) || 500;
+  const h = parseInt(heightInput.value) || 500;
 
   canvas.width = w;
   canvas.height = h;
@@ -102,13 +198,28 @@ function render() {
   ctx.fillStyle = colorPicker.value;
   ctx.fillRect(0, 0, w, h);
 
-  if (affectsTextInput.checked) {
-    drawText(w, h);
-    drawOverlay(w, h);
-  } else {
-    drawOverlay(w, h);
-    drawText(w, h);
-  }
+  const overlay1Opacity = overlayOpacityInput.value / 100;
+const overlay2Opacity = overlayOpacity2Input.value / 100;
+
+ drawOverlayImage(
+  overlayImage,
+  w,
+  h,
+  blendModeInput.value,
+  overlay1Opacity,
+  overlaySizeInput.value
+);
+
+drawOverlayImage(
+  overlayImage2,
+  w,
+  h,
+  blendMode2Input.value,
+  overlay2Opacity,
+  overlaySize2Input.value
+);
+  drawText(w, h);
+
 }
 
 /* ---------- events ---------- */
@@ -116,14 +227,13 @@ document.querySelectorAll('input, textarea, select').forEach(el =>
   el.addEventListener('input', render)
 );
 
-overlayInput.addEventListener('change', () => {
-  const file = overlayInput.files[0];
-  if (!file) return;
+function loadImage(file, callback) {
+  if (!file || !file.type.startsWith('image/')) return;
 
-  overlayImage = new Image();
-  overlayImage.onload = render;
-  overlayImage.src = URL.createObjectURL(file);
-});
+  const img = new Image();
+  img.onload = () => callback(img);
+  img.src = URL.createObjectURL(file);
+}
 
 exportBtn.addEventListener('click', () => {
   render();
@@ -134,4 +244,8 @@ exportBtn.addEventListener('click', () => {
 });
 
 /* initial */
-render();
+async function init() {
+  await document.fonts.load('33px Draconian');
+  render();
+}
+init();

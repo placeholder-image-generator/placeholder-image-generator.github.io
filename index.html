@@ -7,27 +7,36 @@
   <link rel='shortcut icon' href='favicon.png' type='image/x-icon' />
   <script src="tailwindcss.min.js"></script>
   <title>Placeholder Image Generator</title>
+  <style>
+  @font-face {
+  font-family: 'Draconian';
+  src: url('draconian.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+  </style>
 </head>
 
 <body class="select-none bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="bg-white shadow-xl rounded-2xl p-4 w-full max-w-md space-y-4">
+  <div class="bg-white shadow-xl rounded-2xl p-4 w-full md:max-w-xl space-y-4">
 
     
 
     <div class="grid grid-cols-3 gap-2 -mt-2 -mb-3">
       <div>
         <label class="font-medium">Width (px)</label>
-        <input id="widthInput" type="number" class="w-full border rounded p-2" placeholder="300" />
+        <input id="widthInput" type="number" class="w-full border rounded p-2" placeholder="500" />
       </div>
 
       <div>
         <label class="font-medium">Height (px)</label>
-        <input id="heightInput" type="number" class="w-full border rounded p-2" placeholder="300" />
+        <input id="heightInput" type="number" class="w-full border rounded p-2" placeholder="500" />
       </div>
       
       <div>
         <label class="font-medium">Background</label>
-        <input id="colorPicker" type="color" class="w-full h-10 border rounded" />
+        <input id="colorPicker" type="color" class="w-full h-10 border rounded" value="#ffffff"/>
       </div>
     </div>
 
@@ -40,8 +49,7 @@
     <div class="flex justify-center">
       <canvas
         id="previewCanvas"
-        class="-mt-3 border rounded bg-gray-200"
-        style="width: 300px; height: 300px;"
+        class="-mt-3 border rounded bg-gray-200 w-80 h-auto md:w-[500px] md:h-[500px]"
       ></canvas>
     </div>
 
@@ -50,19 +58,25 @@
         <label class="font-medium">Text Color</label>
         <select id="textColor" class="w-full border rounded p-2">
           <option value="#ffffff">White</option>
-          <option value="#000000">Black</option>
+          <option selected value="#000000">Black</option>
         </select>
       </div>
 
       <div>
         <label class="font-medium">Text Align</label>
         <select id="textAlign" class="w-full border rounded p-2">
+          
+          <option value="top-left">Top Left</option>
+          <option value="top-right">Top Right</option>
+          <option value="bottom-left">Bottom Left</option>
+          <option value="bottom-right">Bottom Right</option>
+
           <option value="center">Center</option>
           <option value="left">Left</option>
           <option value="right">Right</option>
         </select>
       </div>
-
+      
       <div>
         <label class="font-medium">Font Style</label>
         <select id="fontStyle" class="w-full border rounded p-2">
@@ -75,16 +89,47 @@
     </div>
 
     <div>
-      <label class="font-medium">Overlay Image</label>
-      <input id="overlayInput" type="file" accept="image/*" class="w-full border rounded p-2" />
-    </div>
+  <label class="font-medium">Overlay Image</label>
+
+  <div
+    id="overlayDropzone"
+    class="w-full border-2 border-dashed rounded p-6 text-center cursor-pointer transition"
+  >
+    <p class="text-sm">Drop image here or click to browse</p>
+
+    <input
+      id="overlayInput"
+      type="file"
+      accept="image/*"
+      class="hidden"
+    />
+  </div>
+</div>
+
 
     <div class="grid grid-cols-2 gap-2">
       <div>
-        <label class="font-medium">Blend Mode</label>
+        <label class="font-medium">Blend Mode Overlay 1</label>
         <select id="blendMode" class="w-full border rounded p-2">
-          <option value="multiply">Multiply</option>
-          <option value="screen">Screen</option>
+          <option value="source-over">Normal</option>
+
+<!-- Blend modes -->
+<option value="multiply">Multiply</option>
+<option value="screen">Screen</option>
+<option value="overlay">Overlay</option>
+<option value="darken">Darken</option>
+<option value="lighten">Lighten</option>
+<option value="lighter">Lighter</option>
+<option value="color-dodge">Color Dodge</option>
+<option value="color-burn">Color Burn</option>
+<option value="hard-light">Hard Light</option>
+<option value="soft-light">Soft Light</option>
+<option value="difference">Difference</option>
+<option value="exclusion">Exclusion</option>
+<option value="hue">Hue</option>
+<option value="saturation">Saturation</option>
+<option value="color">Color</option>
+<option value="luminosity">Luminosity</option>
         </select>
       </div>
 
@@ -92,7 +137,7 @@
         <label class="font-medium">Overlay Size</label>
         <select id="overlaySize" class="w-full border rounded p-2">
           <option value="cover">Cover</option>
-          <option value="contain">Contain</option>
+          <option selected value="contain">Contain</option>
         </select>
       </div>
     </div>
@@ -101,13 +146,70 @@
       <label class="font-medium">Overlay Opacity</label>
       <input id="overlayOpacity" type="range" min="0" max="100" value="100" class="flex-1" />
 
-      <label class="flex items-center gap-2 text-sm">
-      <input id="affectsText" type="checkbox" class="rounded" />
-      Overlay affects text
-    </label>
     </div>
 
-    
+  
+
+<div>
+  <div
+    id="overlay2Dropzone"
+    class="mb-4 w-full border-2 border-dashed rounded p-6 text-center cursor-pointer"
+  >
+    <p class="text-sm">Drop second image or click</p>
+
+    <input
+      id="overlay2Input"
+      type="file"
+      accept="image/*"
+      class="hidden"
+    />
+  </div>
+
+  <!--  -->
+  <!--  -->
+  <!--  -->
+<div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="font-medium">Blend Mode Overlay 2</label>
+        <select id="blendMode2" class="w-full border rounded p-2">
+          <option value="source-over">Normal</option>
+
+<!-- Blend modes -->
+<option value="multiply">Multiply</option>
+<option value="screen">Screen</option>
+<option value="overlay">Overlay</option>
+<option value="darken">Darken</option>
+<option value="lighten">Lighten</option>
+<option value="lighter">Lighter</option>
+<option value="color-dodge">Color Dodge</option>
+<option value="color-burn">Color Burn</option>
+<option value="hard-light">Hard Light</option>
+<option value="soft-light">Soft Light</option>
+<option value="difference">Difference</option>
+<option value="exclusion">Exclusion</option>
+<option value="hue">Hue</option>
+<option value="saturation">Saturation</option>
+<option value="color">Color</option>
+<option value="luminosity">Luminosity</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="font-medium">Overlay Size</label>
+        <select id="overlaySize2" class="w-full border rounded p-2">
+          <option value="cover">Cover</option>
+          <option selected value="contain">Contain</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mt-3.5">
+      <label class="font-medium">Overlay Opacity 2</label>
+      <input id="overlayOpacity2" type="range" min="0" max="100" value="100" class="flex-1" />
+    </div>
+  <!--  -->
+</div>
+
 
     <button
       id="exportBtn"
